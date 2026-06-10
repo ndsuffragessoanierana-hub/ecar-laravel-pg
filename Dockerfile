@@ -1,12 +1,12 @@
 FROM php:8.2-fpm
 
-# Install system dependencies
+# System deps
 RUN apt-get update && apt-get install -y \
     git curl libpng-dev libonig-dev libxml2-dev zip unzip \
     libpq-dev \
     && docker-php-ext-install pdo pdo_pgsql mbstring exif pcntl bcmath gd
 
-# Install Composer
+# Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 WORKDIR /var/www
@@ -14,14 +14,21 @@ WORKDIR /var/www
 # Copy project
 COPY . .
 
-# Install PHP dependencies
+# Install dependencies
 RUN composer install --no-dev --optimize-autoloader
 
-# Permissions Laravel
+# Permissions
 RUN chmod -R 775 storage bootstrap/cache
 
-# Expose Render port
+# Laravel optimizations (IMPORTANT)
+RUN php artisan config:clear && \
+    php artisan cache:clear && \
+    php artisan route:clear
+
+# Generate cache (safe if APP_KEY exists in ENV)
+RUN php artisan config:cache
+
 EXPOSE 10000
 
-# Start Laravel server
-CMD php artisan serve --host=0.0.0.0 --port=$PORT
+# IMPORTANT: use PHP-FPM (NOT artisan serve)
+CMD ["php-fpm"]
