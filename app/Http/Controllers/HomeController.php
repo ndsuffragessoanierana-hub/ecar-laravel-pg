@@ -73,7 +73,7 @@ class HomeController extends Controller
 			FROM t_journal j
 			LEFT JOIN t_detail_recap d
 				ON TRIM(d.rec_rec_mois) = TRIM(j.journal_mois)
-				AND TRIM(d.rec_rec_annee) = TRIM(j.journal_annee)
+				AND d.rec_rec_annee = j.journal_annee
 				AND d.rub_rubrique_id IS NOT NULL
 			GROUP BY
 				j.journal_id,
