@@ -34,20 +34,16 @@ class HomeController extends Controller
         |--------------------------------------------------------------------------
         */
         $journals = DB::select("
-            SELECT *
-            FROM (
-                SELECT
-                    journal_id,
-                    (journal_mois || ' ' || journal_annee) AS PERIODE,
-                    NVL(journal_solde_bni,0) AS JOURNAL_SOLDE_BNI,
-                    NVL(journal_solde_bfv,0) AS JOURNAL_SOLDE_BFV,
-                    NVL(journal_solde_caissE,0) AS JOURNAL_SOLDE_CAISSE
-                FROM t_journal
-                ORDER BY journal_id DESC
-            )
-            WHERE ROWNUM <= 12
-            ORDER BY journal_id ASC
-        ");
+			SELECT
+				journal_id,
+				journal_mois || ' ' || journal_annee AS periode,
+				COALESCE(journal_solde_bni, 0) AS journal_solde_bni,
+				COALESCE(journal_solde_bfv, 0) AS journal_solde_bfv,
+				COALESCE(journal_solde_caisse, 0) AS journal_solde_caisse
+			FROM t_journal
+			ORDER BY journal_id DESC
+			LIMIT 12
+		");
 
         $financeLabels = [];
         $financeBNI = [];
@@ -69,24 +65,24 @@ class HomeController extends Controller
         |--------------------------------------------------------------------------
         */
         $finance2 = DB::select("
-            SELECT *
-            FROM (
-                SELECT
-                    j.journal_id,
-                    (j.journal_mois || ' ' || j.journal_annee) AS PERIODE,
-                    SUBSTR(d.rub_rubrique_id,1,1) AS TYPE,
-                    NVL(SUM(d.detail_rkp_montant),0) AS MONTANT
-                FROM t_journal j
-                LEFT JOIN t_detail_recap d
-                    ON TRIM(d.rec_rec_mois) = TRIM(j.journal_mois)
-                    AND TRIM(d.rec_rec_annee) = TRIM(j.journal_annee)
-                WHERE SUBSTR(d.rub_rubrique_id,1,1) IN ('A','B')
-                GROUP BY j.journal_id, j.journal_mois, j.journal_annee, substr(d.rub_rubrique_id,1,1)
-                ORDER BY j.journal_id DESC
-            )
-            WHERE ROWNUM <= 24
-            ORDER BY journal_id ASC
-        ");
+			SELECT
+				j.journal_id,
+				j.journal_mois || ' ' || j.journal_annee AS periode,
+				SUBSTRING(d.rub_rubrique_id, 1, 1) AS type,
+				COALESCE(SUM(d.detail_rkp_montant), 0) AS montant
+			FROM t_journal j
+			LEFT JOIN t_detail_recap d
+				ON TRIM(d.rec_rec_mois) = TRIM(j.journal_mois)
+				AND TRIM(d.rec_rec_annee) = TRIM(j.journal_annee)
+				AND d.rub_rubrique_id IS NOT NULL
+			GROUP BY
+				j.journal_id,
+				j.journal_mois,
+				j.journal_annee,
+				SUBSTRING(d.rub_rubrique_id, 1, 1)
+			ORDER BY j.journal_id DESC
+			LIMIT 24
+		");
 
         $labels2 = [];
         $recettes = [];
