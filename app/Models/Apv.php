@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Apv extends Model
 {
-    protected $table = 'APV';
+    protected $table = 'apv';
     protected $primaryKey = 'IDAPV';
     public $timestamps = false;
     public $incrementing = false;

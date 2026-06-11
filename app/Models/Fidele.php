@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Fidele extends Model
 {
-    protected $table = 'FIDELE';          // Nom table Oracle
+    protected $table = 'fidele';          // Nom table Oracle
     protected $primaryKey = 'MATRICULE';  // Ajuste si autre PK
     public $incrementing = false;
     protected $keyType = 'string';

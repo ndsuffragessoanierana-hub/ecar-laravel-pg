@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Faritra extends Model
 {
-    protected $table = 'FARITRA';
+    protected $table = 'faritra';
     protected $primaryKey = 'IDFARITRA';
     public $timestamps = false;
     public $incrementing = false;
