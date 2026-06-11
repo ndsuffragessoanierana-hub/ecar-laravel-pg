@@ -17,15 +17,15 @@ class HomeController extends Controller
         */
         $stats = [
             'total_fideles' => Fidele::count(),
-            'hommes' => Fidele::where('SEXE', 'L')->count(),
-            'femmes' => Fidele::where('SEXE', 'V')->count(),
-            'actifs' => Fidele::where('STATUT', 'ACTIF')->count(),
+            'hommes' => Fidele::where('sexe', 'L')->count(),
+            'femmes' => Fidele::where('sexe', 'V')->count(),
+            'actifs' => Fidele::where('statut', 'ACTIF')->count(),
         ];
 
         $byFaritra = Fidele::query()
-            ->leftJoin('FARITRA', 'FARITRA.IDFARITRA', '=', 'FIDELE.IDFARITRA')
-            ->selectRaw("COALESCE(FARITRA.LIBELLE_FARITRA, 'N/A') as faritra, COUNT(FIDELE.MATRICULE) as total")
-            ->groupByRaw("COALESCE(FARITRA.LIBELLE_FARITRA, 'N/A')")
+            ->leftJoin('faritra', 'faritra.idfaritra', '=', 'fidele.idfaritra')
+            ->selectRaw("COALESCE(faritra.libelle_faritra, 'N/A') as faritra, COUNT(fidele.matricule) as total")
+            ->groupByRaw("COALESCE(faritra.libelle_faritra, 'N/A')")
             ->pluck('total', 'faritra');
 
         /*
@@ -37,16 +37,16 @@ class HomeController extends Controller
             SELECT *
             FROM (
                 SELECT
-                    JOURNAL_ID,
-                    (JOURNAL_MOIS || ' ' || JOURNAL_ANNEE) AS PERIODE,
-                    NVL(JOURNAL_SOLDE_BNI,0) AS JOURNAL_SOLDE_BNI,
-                    NVL(JOURNAL_SOLDE_BFV,0) AS JOURNAL_SOLDE_BFV,
-                    NVL(JOURNAL_SOLDE_CAISSE,0) AS JOURNAL_SOLDE_CAISSE
-                FROM T_JOURNAL
-                ORDER BY JOURNAL_ID DESC
+                    journal_id,
+                    (journal_mois || ' ' || journal_annee) AS PERIODE,
+                    NVL(journal_solde_bni,0) AS JOURNAL_SOLDE_BNI,
+                    NVL(journal_solde_bfv,0) AS JOURNAL_SOLDE_BFV,
+                    NVL(journal_solde_caissE,0) AS JOURNAL_SOLDE_CAISSE
+                FROM t_journal
+                ORDER BY journal_id DESC
             )
             WHERE ROWNUM <= 12
-            ORDER BY JOURNAL_ID ASC
+            ORDER BY journal_id ASC
         ");
 
         $financeLabels = [];
@@ -72,20 +72,20 @@ class HomeController extends Controller
             SELECT *
             FROM (
                 SELECT
-                    j.JOURNAL_ID,
-                    (j.JOURNAL_MOIS || ' ' || j.JOURNAL_ANNEE) AS PERIODE,
-                    SUBSTR(d.RUB_RUBRIQUE_ID,1,1) AS TYPE,
-                    NVL(SUM(d.DETAIL_RKP_MONTANT),0) AS MONTANT
-                FROM T_JOURNAL j
-                LEFT JOIN T_DETAIL_RECAP d
-                    ON TRIM(d.REC_REC_MOIS) = TRIM(j.JOURNAL_MOIS)
-                    AND TRIM(d.REC_REC_ANNEE) = TRIM(j.JOURNAL_ANNEE)
-                WHERE SUBSTR(d.RUB_RUBRIQUE_ID,1,1) IN ('A','B')
-                GROUP BY j.JOURNAL_ID, j.JOURNAL_MOIS, j.JOURNAL_ANNEE, SUBSTR(d.RUB_RUBRIQUE_ID,1,1)
-                ORDER BY j.JOURNAL_ID DESC
+                    j.journal_id,
+                    (j.journal_mois || ' ' || j.journal_annee) AS PERIODE,
+                    SUBSTR(d.rub_rubrique_id,1,1) AS TYPE,
+                    NVL(SUM(d.detail_rkp_montant),0) AS MONTANT
+                FROM t_journal j
+                LEFT JOIN t_detail_recap d
+                    ON TRIM(d.rec_rec_mois) = TRIM(j.journal_mois)
+                    AND TRIM(d.rec_rec_annee) = TRIM(j.journal_annee)
+                WHERE SUBSTR(d.rub_rubrique_id,1,1) IN ('A','B')
+                GROUP BY j.journal_id, j.journal_mois, j.journal_annee, substr(d.rub_rubrique_id,1,1)
+                ORDER BY j.journal_id DESC
             )
             WHERE ROWNUM <= 24
-            ORDER BY JOURNAL_ID ASC
+            ORDER BY journal_id ASC
         ");
 
         $labels2 = [];
