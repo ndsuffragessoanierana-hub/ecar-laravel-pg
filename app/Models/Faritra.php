@@ -7,14 +7,14 @@ use Illuminate\Database\Eloquent\Model;
 class Faritra extends Model
 {
     protected $table = 'faritra';
-    protected $primaryKey = 'IDFARITRA';
+    protected $primaryKey = 'idfaritra';
     public $timestamps = false;
     public $incrementing = false;
 
-    protected $fillable = ['IDFARITRA', 'LIBELLE_FARITRA'];
+    protected $fillable = ['idfaritra', 'libelle_faritra'];
 
     public function fideles()
     {
-        return $this->hasMany(Fidele::class, 'IDFARITRA', 'IDFARITRA');
+        return $this->hasMany(Fidele::class, 'idfaritra', 'idfaritra');
     }
 }

@@ -7,9 +7,9 @@ use Illuminate\Database\Eloquent\Model;
 class Apv extends Model
 {
     protected $table = 'apv';
-    protected $primaryKey = 'IDAPV';
+    protected $primaryKey = 'idapv';
     public $timestamps = false;
     public $incrementing = false;
 
-    protected $fillable = ['IDAPV', 'LIBELLE_APV', 'IDFARITRA'];
+    protected $fillable = ['idapv', 'libelle_apv', 'idfaritra'];
 }

@@ -7,22 +7,22 @@ use Illuminate\Database\Eloquent\Model;
 class Fidele extends Model
 {
     protected $table = 'fidele';          // Nom table Oracle
-    protected $primaryKey = 'MATRICULE';  // Ajuste si autre PK
+    protected $primaryKey = 'matricule';  // Ajuste si autre PK
     public $incrementing = false;
     protected $keyType = 'string';
     public $timestamps = false;
 
     // Colonnes de base (ajuste selon ta table)
     protected $fillable = [
-        'MATRICULE',
-        'NOM',
-        'PRENOM',
-        'NOM_BAPTEME',
-        'DATE_NAISSANCE',
-        'ADRESSE',
-        'SEXE',
-        'STATUT',
-        'IDFARITRA',
-        'IDAPV',
+        'matricule',
+        'nom',
+        'prenom',
+        'nom_bapteme',
+        'date_naissance',
+        'adresse',
+        'sexe',
+        'statut',
+        'idfaritra',
+        'idapv',
     ];
 }
