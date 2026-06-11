@@ -3,8 +3,8 @@
 use App\Http\Controllers\FinanceController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\HomeController;
-use App\Http\Controllers\FideleWebController;
 use App\Http\Controllers\BienController;
+use App\Http\Controllers\Api\FideleWebController;
 
 // Accueil
 Route::get('/', [HomeController::class, 'index'])->name('home');

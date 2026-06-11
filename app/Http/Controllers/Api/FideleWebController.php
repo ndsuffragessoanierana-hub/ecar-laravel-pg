@@ -1,109 +1,112 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Api;
 
-use App\Exports\FidelesExport;
-use App\Models\Apv;
-use App\Models\Faritra;
-use App\Models\Fidele;
-use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
-use Maatwebsite\Excel\Facades\Excel;
+use Illuminate\Support\Facades\DB;
 
 class FideleWebController extends Controller
 {
     public function index(Request $request)
     {
         $search = trim((string) $request->get('q', ''));
-        $faritra = $request->get('faritra');
-        $apv = $request->get('apv');
+        $faritra = trim((string) $request->get('faritra', ''));
+        $apv = trim((string) $request->get('apv', ''));
 
-        $query = Fidele::query()->select([
-            'MATRICULE', 'NOM', 'PRENOM', 'NOM_BAPTEME',
-            'SEXE', 'STATUT', 'IDFARITRA', 'IDAPV'
-        ]);
+        // Liste déroulante Faritra
+        $faritras = DB::table('FARITRA')
+            ->selectRaw('TRIM(IDFARITRA) as idfaritra, LIBELLE_FARITRA as libelle_faritra')
+            ->orderBy('LIBELLE_FARITRA')
+            ->get();
 
-        if ($search !== '') {
-            $query->where(function ($q) use ($search) {
-                $q->where('MATRICULE', 'like', "%{$search}%")
-                  ->orWhere('NOM', 'like', "%{$search}%")
-                  ->orWhere('PRENOM', 'like', "%{$search}%");
-            });
+        // Liste déroulante APV (filtrée si faritra choisi)
+        $apvsQuery = DB::table('APV')
+            ->selectRaw('TRIM(IDAPV) as idapv, LIBELLE_APV as libelle_apv, TRIM(IDFARITRA) as idfaritra');
+
+        if ($faritra !== '') {
+            $apvsQuery->whereRaw('TRIM(IDFARITRA) = ?', [$faritra]);
         }
 
-        if ($faritra) {
-            $query->where('IDFARITRA', $faritra);
-        }
+        $apvs = $apvsQuery
+            ->orderBy('LIBELLE_APV')
+            ->get();
 
-        if ($apv) {
-            $query->where('IDAPV', $apv);
-        }
-
-        $fideles = $query->orderBy('IDFARITRA')
-            ->orderBy('IDAPV')
-            ->orderBy('NOM')
+        // Liste fidèles
+        $fideles = DB::table('FIDELE')
+            ->selectRaw("
+                TRIM(MATRICULE) as matricule,
+                NOM as nom,
+                PRENOM as prenom,
+                NOM_BAPTEME as nom_bapteme,
+                SEXE as sexe,
+                STATUT as statut,
+                TRIM(IDFARITRA) as idfaritra,
+                TRIM(IDAPV) as idapv
+            ")
+            ->when($search !== '', function ($q) use ($search) {
+                $s = mb_strtoupper($search);
+                $q->where(function ($qq) use ($s) {
+                    $qq->whereRaw('UPPER(TRIM(MATRICULE)) LIKE ?', ["%{$s}%"])
+                        ->orWhereRaw('UPPER(NOM) LIKE ?', ["%{$s}%"])
+                        ->orWhereRaw('UPPER(PRENOM) LIKE ?', ["%{$s}%"]);
+                });
+            })
+            ->when($faritra !== '', fn($q) => $q->whereRaw('TRIM(IDFARITRA) = ?', [$faritra]))
+            ->when($apv !== '', fn($q) => $q->whereRaw('TRIM(IDAPV) = ?', [$apv]))
+            ->orderBy('nom')
+            ->orderBy('prenom')
             ->paginate(15)
             ->withQueryString();
 
-        // Dashboard cards
-        $stats = [
-            'total' => Fidele::count(),
-            'hommes' => Fidele::where('SEXE', 'M')->count(),
-            'femmes' => Fidele::where('SEXE', 'F')->count(),
-            'actifs' => Fidele::where('STATUT', 'ACTIF')->count(),
-        ];
-
-        $faritras = Faritra::orderBy('LIBELLE_FARITRA')->get(['IDFARITRA', 'LIBELLE_FARITRA']);
-        $apvs = Apv::when($faritra, fn($q) => $q->where('IDFARITRA', $faritra))
-            ->orderBy('LIBELLE_APV')
-            ->get(['IDAPV', 'LIBELLE_APV', 'IDFARITRA']);
-
-        return view('fideles.index', compact('fideles', 'stats', 'faritras', 'apvs', 'search', 'faritra', 'apv'));
+        return view('fideles.index', compact(
+            'fideles',
+            'faritras',
+            'apvs',
+            'search',
+            'faritra',
+            'apv'
+        ));
     }
 
+    // Endpoint AJAX pour recharger APV quand faritra change
     public function apvByFaritra(string $idfaritra)
     {
-        $apvs = Apv::where('IDFARITRA', $idfaritra)
+        $rows = DB::table('APV')
+            ->selectRaw('TRIM(IDAPV) as idapv, LIBELLE_APV as libelle_apv, TRIM(IDFARITRA) as idfaritra')
+            ->whereRaw('TRIM(IDFARITRA) = ?', [trim($idfaritra)])
             ->orderBy('LIBELLE_APV')
-            ->get(['IDAPV', 'LIBELLE_APV']);
+            ->get();
 
-        return response()->json($apvs);
+        return response()->json($rows);
     }
 
-    public function exportExcel(Request $request)
-    {
-        return Excel::download(new FidelesExport($request->all()), 'fideles.xlsx');
-    }
+    // update fidele
+    public function update(Request $request, string $matricule)
+{
+    $data = $request->validate([
+        'nom' => 'nullable|string|max:255',
+        'prenom' => 'nullable|string|max:255',
+        'nom_bapteme' => 'nullable|string|max:255',
+        'statut' => 'nullable|string|max:100',
+        'idfaritra' => 'nullable|string|max:20',
+        'idapv' => 'nullable|string|max:20',
+    ], [
+        'nom.max' => 'Le nom est trop long.',
+        'prenom.max' => 'Le prénom est trop long.',
+    ]);
 
-    public function exportPdf(Request $request)
-    {
-        $rows = $this->filteredRows($request)->limit(2000)->get();
-        $pdf = Pdf::loadView('fideles.pdf', ['rows' => $rows])->setPaper('a4', 'landscape');
-        return $pdf->download('fideles.pdf');
-    }
-
-    private function filteredRows(Request $request)
-    {
-        $search = trim((string) $request->get('q', ''));
-        $faritra = $request->get('faritra');
-        $apv = $request->get('apv');
-
-        $query = Fidele::query()->select([
-            'MATRICULE', 'NOM', 'PRENOM', 'NOM_BAPTEME',
-            'SEXE', 'STATUT', 'IDFARITRA', 'IDAPV'
+    DB::table('FIDELE')
+        ->whereRaw('TRIM(MATRICULE) = ?', [trim($matricule)])
+        ->update([
+            'NOM' => $data['nom'] ?? null,
+            'PRENOM' => $data['prenom'] ?? null,
+            'NOM_BAPTEME' => $data['nom_bapteme'] ?? null,
+            'STATUT' => $data['statut'] ?? null,
+            'IDFARITRA' => $data['idfaritra'] ?? null,
+            'IDAPV' => $data['idapv'] ?? null,
         ]);
 
-        if ($search !== '') {
-            $query->where(function ($q) use ($search) {
-                $q->where('MATRICULE', 'like', "%{$search}%")
-                  ->orWhere('NOM', 'like', "%{$search}%")
-                  ->orWhere('PRENOM', 'like', "%{$search}%");
-            });
-        }
-
-        if ($faritra) $query->where('IDFARITRA', $faritra);
-        if ($apv) $query->where('IDAPV', $apv);
-
-        return $query->orderBy('IDFARITRA')->orderBy('IDAPV')->orderBy('NOM');
+    return redirect()->route('fideles.index', $request->query())
+        ->with('success', 'Fidèle mis à jour avec succès.');
     }
 }
