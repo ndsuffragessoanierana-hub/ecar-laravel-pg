@@ -6,12 +6,11 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Exports\fidelesExport;
-use App\Models\apv;
-use App\Models\faritra;
-use App\Models\fidele;
+use App\Models\Apv;
+use App\Models\Faritra;
+use App\Models\Fidele;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Maatwebsite\Excel\Facades\Excel;
-
 
 class fideleWebController extends Controller
 {
