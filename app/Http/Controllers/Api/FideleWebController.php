@@ -11,7 +11,6 @@ use App\Models\faritra;
 use App\Models\fidele;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Maatwebsite\Excel\Facades\Excel;
-use App\Exports\FidelesExport;
 
 
 class fideleWebController extends Controller
