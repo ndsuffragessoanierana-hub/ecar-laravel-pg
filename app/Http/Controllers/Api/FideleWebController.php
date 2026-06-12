@@ -11,6 +11,8 @@ use App\Models\faritra;
 use App\Models\fidele;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\FidelesExport;
+
 
 class fideleWebController extends Controller
 {
@@ -86,7 +88,28 @@ class fideleWebController extends Controller
 
         return response()->json($rows);
     }
+	
+	// Export Excel
+	public function exportExcel(Request $request)
+	{
+		return Excel::download(new FidelesExport($request->all()), 'fideles.xlsx');
+	}
 
+	// Export PDF
+	public function exportPdf(Request $request)
+	{
+		$rows = DB::table('fidele')
+			->select('matricule','nom','prenom','nom_bapteme','sexe','statut','idfaritra','idapv')
+			->get();
+
+		$pdf = Pdf::loadView('fideles.pdf', [
+			'rows' => $rows
+		])->setPaper('a4', 'landscape');
+
+		return $pdf->download('fideles.pdf');
+	}
+	
+	
     // update fidele
     public function update(Request $request, string $matricule)
 {
