@@ -42,7 +42,10 @@ Route::get('/biens', [BienController::class, 'index'])->name('biens.index');
 Route::get('/biens/pdf', [BienController::class, 'pdf'])->name('biens.pdf');
 
 Route::get('/biens/qrcode', [BienController::class, 'qrcode'])->name('biens.qrcode');
-Route::get('/biens/qrcode/pdf/{page?}', [BienController::class, 'qrcodePdf']);
+// Route::get('/biens/qrcode/pdf/{page?}', [BienController::class, 'qrcodePdf']);
 // Route::get('/biens/qrcode/pdf', [BienController::class, 'qrcodePdf'])->name('biens.qrcode.pdf');
+
+Route::get('/biens/qrcode/pdf/{page?}', [BienController::class, 'qrcodePdf'])
+    ->name('biens.qrcode.pdf');
 
 //Route::get('/biens/qrcode/pdf', [BienController::class, 'qrcodePdf']);
