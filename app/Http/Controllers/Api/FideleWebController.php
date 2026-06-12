@@ -15,6 +15,9 @@ use Maatwebsite\Excel\Facades\Excel;
 
 class fideleWebController extends Controller
 {
+	ini_set('memory_limit', '512M');
+	set_time_limit(120);
+	
     public function index(Request $request)
     {
         $search = trim((string) $request->get('q', ''));
@@ -97,13 +100,19 @@ class fideleWebController extends Controller
 	// Export PDF
 	public function exportPdf(Request $request)
 	{
+		// 🔥 IMPORTANT : chunk au lieu de get massif
 		$rows = DB::table('fidele')
-			->select('matricule','nom','prenom','nom_bapteme','sexe','statut','idfaritra','idapv')
+			->select('matricule','nom','prenom','nom_bapteme','statut','idfaritra','idapv')
+			->orderBy('matricule')
+			->limit(5000) // sécurité Render
 			->get();
 
 		$pdf = Pdf::loadView('fideles.pdf', [
 			'rows' => $rows
-		])->setPaper('a4', 'landscape');
+		])
+		->setPaper('a4', 'landscape')
+		->setOption('isHtml5ParserEnabled', true)
+		->setOption('isRemoteEnabled', true);
 
 		return $pdf->download('fideles.pdf');
 	}
