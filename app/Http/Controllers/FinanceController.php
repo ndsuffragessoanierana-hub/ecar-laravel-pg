@@ -272,11 +272,12 @@ class FinanceController extends Controller
         )->libelle_compte;
 
         return Pdf::loadView('finances.detail-par-compte-pdf', array_merge($data, [
-            'compte' => $noCompte,
-            'date_debut' => $dateDebut,
-            'date_fin' => $dateFin,
-            'libelleCompte' => $libelleCompte,
-        ]))->setPaper('a4', 'landscape')
-          ->download('detail-par-compte.pdf');
+			'compte' => $noCompte,
+			'date_debut' => $dateDebut,
+			'date_fin' => $dateFin,
+			'libelleCompte' => $libelleCompte,
+		]))->setPaper('a4', 'landscape')
+		  ->stream('detail-par-compte.pdf');
     }
+		
 }
