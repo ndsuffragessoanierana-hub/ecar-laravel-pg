@@ -72,16 +72,16 @@ class BienController extends Controller
     {
         $biens = DB::select("
             SELECT 
-            F.IDFITAOVANA,
-            F.DENOMINATION,
-            F.REFERENCE,
-            F.REMARQUE,
-            F.QR_TEXT,
-            LF.NO_INVENTAIRE,
-            LF.LOCALISATION
-            FROM FITAOVANA F
-            LEFT JOIN LISTE_FITAOVANA LF 
-            ON LF.IDFITAOVANA = F.IDFITAOVANA
+            f.idfitaovana,
+            f.denomination,
+            f.reference,
+            f.remarque,
+            f.qr_text,
+            lf.no_inventaire,
+            lf.localisation
+            FROM fitaovana F
+            LEFT JOIN liste_fitaovana LF 
+            ON LF.idfitaovana = F.idfitaovana
         ");
 
         return view('biens.qrcode', compact('biens'));
@@ -136,7 +136,7 @@ class BienController extends Controller
             FROM fitaovana f
             LEFT JOIN empla_fitaovana e ON e.fit_idfitaovana = f.idfitaovana 
             LEFT JOIN emplacement p ON p.idplace = e.emp_idplace
-            LEFT JOIN LISTE_FITAOVANA LF ON LF.IDFITAOVANA = F.IDFITAOVANA
+            LEFT JOIN liste_fitaovana LF ON LF.idfitaovana = F.idfitaovana
             ORDER BY p.toerana
             OFFSET $offset ROWS FETCH NEXT $limit ROWS ONLY
         ");
