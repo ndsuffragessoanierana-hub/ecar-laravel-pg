@@ -1,5 +1,7 @@
 FROM php:8.2-fpm
 
+RUN echo "memory_limit=1024M" > /usr/local/etc/php/conf.d/memory-limit.ini
+
 RUN apt-get update && apt-get install -y \
     git curl libpng-dev libonig-dev libxml2-dev zip unzip \
     libpq-dev \
@@ -14,8 +16,6 @@ COPY . .
 RUN composer install --no-dev --optimize-autoloader
 
 RUN chmod -R 775 storage bootstrap/cache
-
-RUN echo "memory_limit=512M" > /usr/local/etc/php/conf.d/memory-limit.ini
 
 EXPOSE 10000
 
