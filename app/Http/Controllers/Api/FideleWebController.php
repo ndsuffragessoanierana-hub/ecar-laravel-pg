@@ -15,8 +15,6 @@ use Maatwebsite\Excel\Facades\Excel;
 
 class fideleWebController extends Controller
 {
-	ini_set('memory_limit', '512M');
-	set_time_limit(120);
 	
     public function index(Request $request)
     {
@@ -100,6 +98,9 @@ class fideleWebController extends Controller
 	// Export PDF
 	public function exportPdf(Request $request)
 	{
+		ini_set('memory_limit', '512M');
+		set_time_limit(120);
+
 		// 🔥 IMPORTANT : chunk au lieu de get massif
 		$rows = DB::table('fidele')
 			->select('matricule','nom','prenom','nom_bapteme','statut','idfaritra','idapv')
