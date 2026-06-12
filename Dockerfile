@@ -15,6 +15,8 @@ RUN composer install --no-dev --optimize-autoloader
 
 RUN chmod -R 775 storage bootstrap/cache
 
+RUN echo "memory_limit=512M" > /usr/local/etc/php/conf.d/memory-limit.ini
+
 EXPOSE 10000
 
 CMD php artisan serve --host=0.0.0.0 --port=$PORT
