@@ -2,44 +2,23 @@
 
 namespace App\Exports;
 
-use App\Models\Fidele;
-use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Concerns\FromCollection;
-use Maatwebsite\Excel\Concerns\WithHeadings;
 
-class FidelesExport implements FromCollection, WithHeadings
+class FidelesExport implements FromCollection
 {
-    public function __construct(private array $filters = [])
+    protected $filters;
+
+    public function __construct($filters = [])
     {
+        $this->filters = $filters;
     }
 
-    public function collection(): Collection
+    public function collection()
     {
-        $query = Fidele::query()->select([
-            'MATRICULE', 'NOM', 'PRENOM', 'NOM_BAPTEME',
-            'SEXE', 'STATUT', 'IDFARITRA', 'IDAPV'
-        ]);
-
-        $search = trim((string) ($this->filters['q'] ?? ''));
-        $faritra = $this->filters['faritra'] ?? null;
-        $apv = $this->filters['apv'] ?? null;
-
-        if ($search !== '') {
-            $query->where(function ($q) use ($search) {
-                $q->where('MATRICULE', 'like', "%{$search}%")
-                  ->orWhere('NOM', 'like', "%{$search}%")
-                  ->orWhere('PRENOM', 'like', "%{$search}%");
-            });
-        }
-
-        if ($faritra) $query->where('IDFARITRA', $faritra);
-        if ($apv) $query->where('IDAPV', $apv);
-
-        return $query->orderBy('IDFARITRA')->orderBy('IDAPV')->orderBy('NOM')->get();
-    }
-
-    public function headings(): array
-    {
-        return ['MATRICULE', 'NOM', 'PRENOM', 'NOM_BAPTEME', 'SEXE', 'STATUT', 'IDFARITRA', 'IDAPV'];
+        return DB::table('fidele')
+            ->select('matricule','nom','prenom','nom_bapteme','statut','idfaritra','idapv')
+            ->orderBy('matricule')
+            ->get();
     }
 }
