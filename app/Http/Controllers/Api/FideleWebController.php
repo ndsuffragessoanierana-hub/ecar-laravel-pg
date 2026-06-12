@@ -2,8 +2,15 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use App\Exports\FidelesExport;
+use App\Models\Apv;
+use App\Models\Faritra;
+use App\Models\Fidele;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Maatwebsite\Excel\Facades\Excel;
 
 class FideleWebController extends Controller
 {
