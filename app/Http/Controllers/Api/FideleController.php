@@ -13,27 +13,27 @@ class FideleController extends Controller
     {
         $query = Fidele::query()
             ->select([
-                'MATRICULE',
-                'NOM',
-                'PRENOM',
-                'NOM_BAPTEME',
-                'DATE_NAISSANCE',
-                'ADRESSE',
-                'SEXE',
-                'STATUT',
-                'IDFARITRA',
-                'IDAPV',
+                'matricule',
+                'nom',
+                'prenom',
+                'nom_bapteme',
+                'date_naissance',
+                'adresse',
+                'sexe',
+                'statut',
+                'idfaritra',
+                'idapv',
             ])
-            ->orderBy('IDFARITRA')
-            ->orderBy('IDAPV')
-            ->orderBy('MATRICULE');
+            ->orderBy('idfaritra')
+            ->orderBy('idapv')
+            ->orderBy('matricule');
 
-        if ($request->filled('idfari tra')) { // facultatif, filtre
-            $query->where('IDFARITRA', $request->string('idfaritra'));
+        if ($request->filled('idfaritra')) { // facultatif, filtre
+            $query->where('idfaritra', $request->string('idfaritra'));
         }
 
         if ($request->filled('idapv')) { // facultatif, filtre
-            $query->where('IDAPV', $request->string('idapv'));
+            $query->where('idapv', $request->string('idapv'));
         }
 
         return response()->json($query->limit(200)->get());

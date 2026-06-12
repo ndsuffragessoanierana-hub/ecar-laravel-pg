@@ -5,14 +5,14 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use App\Exports\FidelesExport;
-use App\Models\Apv;
-use App\Models\Faritra;
-use App\Models\Fidele;
+use App\Exports\fidelesExport;
+use App\Models\apv;
+use App\Models\faritra;
+use App\Models\fidele;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Maatwebsite\Excel\Facades\Excel;
 
-class FideleWebController extends Controller
+class fideleWebController extends Controller
 {
     public function index(Request $request)
     {
@@ -20,46 +20,46 @@ class FideleWebController extends Controller
         $faritra = trim((string) $request->get('faritra', ''));
         $apv = trim((string) $request->get('apv', ''));
 
-        // Liste déroulante Faritra
-        $faritras = DB::table('FARITRA')
-            ->selectRaw('TRIM(IDFARITRA) as idfaritra, LIBELLE_FARITRA as libelle_faritra')
-            ->orderBy('LIBELLE_FARITRA')
+        // Liste déroulante faritra
+        $faritras = DB::table('faritra')
+            ->selectRaw('TRIM(idfaritra) as idfaritra, libelle_faritra as libelle_faritra')
+            ->orderBy('libelle_faritra')
             ->get();
 
-        // Liste déroulante APV (filtrée si faritra choisi)
-        $apvsQuery = DB::table('APV')
-            ->selectRaw('TRIM(IDAPV) as idapv, LIBELLE_APV as libelle_apv, TRIM(IDFARITRA) as idfaritra');
+        // Liste déroulante apv (filtrée si faritra choisi)
+        $apvsQuery = DB::table('apv')
+            ->selectRaw('TRIM(idapv) as idapv, libelle_apv as libelle_apv, TRIM(idfaritra) as idfaritra');
 
         if ($faritra !== '') {
-            $apvsQuery->whereRaw('TRIM(IDFARITRA) = ?', [$faritra]);
+            $apvsQuery->whereRaw('TRIM(idfaritra) = ?', [$faritra]);
         }
 
         $apvs = $apvsQuery
-            ->orderBy('LIBELLE_APV')
+            ->orderBy('libelle_apv')
             ->get();
 
         // Liste fidèles
-        $fideles = DB::table('FIDELE')
+        $fideles = DB::table('fidele')
             ->selectRaw("
-                TRIM(MATRICULE) as matricule,
-                NOM as nom,
-                PRENOM as prenom,
-                NOM_BAPTEME as nom_bapteme,
-                SEXE as sexe,
-                STATUT as statut,
-                TRIM(IDFARITRA) as idfaritra,
-                TRIM(IDAPV) as idapv
+                TRIM(matricule) as matricule,
+                nom as nom,
+                prenom as prenom,
+                nom_bapteme as nom_bapteme,
+                sexe as sexe,
+                statut as statut,
+                TRIM(idfaritra) as idfaritra,
+                TRIM(idapv) as idapv
             ")
             ->when($search !== '', function ($q) use ($search) {
                 $s = mb_strtoupper($search);
                 $q->where(function ($qq) use ($s) {
-                    $qq->whereRaw('UPPER(TRIM(MATRICULE)) LIKE ?', ["%{$s}%"])
-                        ->orWhereRaw('UPPER(NOM) LIKE ?', ["%{$s}%"])
-                        ->orWhereRaw('UPPER(PRENOM) LIKE ?', ["%{$s}%"]);
+                    $qq->whereRaw('UPPER(TRIM(matricule)) LIKE ?', ["%{$s}%"])
+                        ->orWhereRaw('UPPER(nom) LIKE ?', ["%{$s}%"])
+                        ->orWhereRaw('UPPER(prenom) LIKE ?', ["%{$s}%"]);
                 });
             })
-            ->when($faritra !== '', fn($q) => $q->whereRaw('TRIM(IDFARITRA) = ?', [$faritra]))
-            ->when($apv !== '', fn($q) => $q->whereRaw('TRIM(IDAPV) = ?', [$apv]))
+            ->when($faritra !== '', fn($q) => $q->whereRaw('TRIM(idfaritra) = ?', [$faritra]))
+            ->when($apv !== '', fn($q) => $q->whereRaw('TRIM(idapv) = ?', [$apv]))
             ->orderBy('nom')
             ->orderBy('prenom')
             ->paginate(15)
@@ -75,13 +75,13 @@ class FideleWebController extends Controller
         ));
     }
 
-    // Endpoint AJAX pour recharger APV quand faritra change
-    public function apvByFaritra(string $idfaritra)
+    // Endpoint AJAX pour recharger apv quand faritra change
+    public function apvByfaritra(string $idfaritra)
     {
-        $rows = DB::table('APV')
-            ->selectRaw('TRIM(IDAPV) as idapv, LIBELLE_APV as libelle_apv, TRIM(IDFARITRA) as idfaritra')
-            ->whereRaw('TRIM(IDFARITRA) = ?', [trim($idfaritra)])
-            ->orderBy('LIBELLE_APV')
+        $rows = DB::table('apv')
+            ->selectRaw('TRIM(idapv) as idapv, libelle_apv as libelle_apv, TRIM(idfaritra) as idfaritra')
+            ->whereRaw('TRIM(idfaritra) = ?', [trim($idfaritra)])
+            ->orderBy('libelle_apv')
             ->get();
 
         return response()->json($rows);
@@ -102,15 +102,15 @@ class FideleWebController extends Controller
         'prenom.max' => 'Le prénom est trop long.',
     ]);
 
-    DB::table('FIDELE')
-        ->whereRaw('TRIM(MATRICULE) = ?', [trim($matricule)])
+    DB::table('fidele')
+        ->whereRaw('TRIM(matricule) = ?', [trim($matricule)])
         ->update([
-            'NOM' => $data['nom'] ?? null,
-            'PRENOM' => $data['prenom'] ?? null,
-            'NOM_BAPTEME' => $data['nom_bapteme'] ?? null,
-            'STATUT' => $data['statut'] ?? null,
-            'IDFARITRA' => $data['idfaritra'] ?? null,
-            'IDAPV' => $data['idapv'] ?? null,
+            'nom' => $data['nom'] ?? null,
+            'prenom' => $data['prenom'] ?? null,
+            'nom_bapteme' => $data['nom_bapteme'] ?? null,
+            'statut' => $data['statut'] ?? null,
+            'idfaritra' => $data['idfaritra'] ?? null,
+            'idapv' => $data['idapv'] ?? null,
         ]);
 
     return redirect()->route('fideles.index', $request->query())
